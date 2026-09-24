@@ -1,0 +1,23 @@
+{
+  "name": "chat-is-this-real",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "vite --host 0.0.0.0",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "concurrently": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "pdfjs-dist": "^6.3.289",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "latest"
+  }
+}
