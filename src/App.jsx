@@ -14,6 +14,10 @@ import './styles.css';
 const STORAGE_PREFIX = 'chat-is-this-real-';
 const LEGACY_STORAGE_PREFIX = 'studyloop-';
 
+function writeStoredValue(name, value) {
+  try { localStorage.setItem(`${STORAGE_PREFIX}${name}`, value); } catch { /* Storage can be disabled or full. */ }
+}
+
 function readStoredValue(name, fallback, parseJson = false) {
   try {
     const key = `${STORAGE_PREFIX}${name}`;
@@ -60,17 +64,17 @@ export default function App() {
   const requestId = useRef(0);
   const lastInput = useRef('');
 
-  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem(`${STORAGE_PREFIX}theme`, theme); }, [theme]);
+  useEffect(() => { document.documentElement.dataset.theme = theme; writeStoredValue('theme', theme); }, [theme]);
   useEffect(() => {
     if (!result || readOnly) return;
     const entry = { id: `${result.topic}-${Date.now()}`, topic: result.topic, blocks: result.blocks, cards: result.cards, savedAt: Date.now() };
     setSavedSets((previous) => {
       const next = [entry, ...previous.filter((set) => set.topic !== result.topic)].slice(0, 12);
-      localStorage.setItem(`${STORAGE_PREFIX}sessions`, JSON.stringify(next)); return next;
+      writeStoredValue('sessions', JSON.stringify(next)); return next;
     });
   }, [result, readOnly]);
 
-  useEffect(() => { localStorage.setItem(`${STORAGE_PREFIX}progress`, JSON.stringify(progress)); }, [progress]);
+  useEffect(() => { writeStoredValue('progress', JSON.stringify(progress)); }, [progress]);
 
   async function generate(value = lastInput.current) {
     const input = value.trim();
