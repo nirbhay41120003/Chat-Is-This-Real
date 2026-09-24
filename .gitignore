@@ -1,7 +1,8 @@
 node_modules/
 server/node_modules/
 dist/
-public/
+public/*
+!public/favicon.svg
 .vercel/
 .env*
 !.env.example

@@ -1,35 +1,117 @@
-# Chat Is This Real
+<div align="center">
+  <img src="docs/chat-is-this-real-mark.svg" alt="Chat Is This Real logo" width="88" height="88">
+  <h1>Chat Is This Real</h1>
+  <p><strong>Turn your notes into a study set you can actually quiz yourself on.</strong></p>
+  <p>
+    <a href="https://chat-is-this-real.vercel.app/">Website</a> ·
+    <a href="#run-it-locally">Run it locally</a> ·
+    <a href="#how-it-works">How it works</a> ·
+    <a href="#model-and-ai-generation">Model and AI generation</a> ·
+    <a href="#project-layout">Project layout</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/github/last-commit/nirbhay41120003/chat-is-this-real" alt="Last commit">
+    <img src="https://img.shields.io/badge/stack-React%20%2B%20Express-blue" alt="React + Express">
+    <img src="https://img.shields.io/badge/model-Groq-success" alt="Groq">
+  </p>
+</div>
 
-Chat Is This Real turns notes into a small study set with flashcards, optional charts and checklists, and a multiple-choice quiz. It runs as a React app with an Express API that sends generation requests to Groq. The Groq key stays on the server.
+Chat Is This Real is a focused study workspace. Give it class notes or a topic and it builds flashcards, and when useful, a chart or checklist. You can study the cards, check your recall with a multiple-choice quiz, and come back to cards when their review date is due.
+
+The frontend is a React single-page app built with Vite. An Express API sends generation requests to Groq. The Groq API key stays on the server and is never included in the browser bundle.
+
+## Features
+
+- Paste notes or import selectable text from PDF, TXT, and Markdown files.
+- Generate 5–10 question-and-answer cards with easy, medium, and hard difficulty labels.
+- Add an optional chart or checklist when that format suits the source material.
+- Stream generation progress while the model is responding.
+- Flip through flashcards, rate recall, and schedule a next review.
+- Take a multiple-choice quiz, review the score, and retry missed cards.
+- Refine a generated set with a short follow-up instruction.
+- Save recent sets in this browser, export a set as JSON, or copy a read-only share link.
+- Switch between light and dark themes.
+
+## How it works
+
+1. **Provide source material.** Paste notes into the input or import a file. PDF import extracts selectable text in the browser; scanned pages are not OCR processed. Files must be smaller than 8 MB, and the text passed to the model is capped at 12,000 characters.
+2. **Request a study set.** The browser sends the input to `POST /api/generate`. When you refine an existing set, it sends the current set and your instruction to `POST /api/refine`.
+3. **Generate structured content.** The API builds a system and user prompt, requests JSON output from Groq, and streams text events back to the browser. The browser can show complete blocks as they arrive.
+4. **Validate the result.** The server checks that the response has a topic, 5–10 valid cards, unique block IDs, and correctly shaped optional charts or checklists. The frontend validates it again before displaying it.
+5. **Study and track recall.** Flashcard ratings set review intervals. Quiz choices are drawn from other answers in the deck, and scores and missed-card history are saved locally.
+
+The server times out a generation request after 15 seconds. A rate limit or malformed model response is surfaced as an error so you can retry.
+
+## Model and AI generation
+
+Requests go through Groq's OpenAI-compatible chat completions endpoint. The default model is **`openai/gpt-oss-20b`**, selected in `server/index.js`. Set `GROQ_MODEL` on the server to choose another model available to your Groq account. The request uses JSON-object response mode, a temperature of `0.4`, and streaming.
+
+The prompt in `server/prompt.js` asks for JSON with a `topic` and typed `blocks`: cards with a question, answer, and difficulty; optional charts with matching labels and numeric values; and optional checklists. A refinement request includes the existing result and the follow-up instruction so the model can update the study material.
+
+Model output can still contain mistakes. Review generated material against your source notes before relying on it.
 
 ## Run it locally
 
+### Requirements
 
-1. Install the root dependencies: `npm install`.
-2. Install the API dependencies: `cd server && npm install && cd ..`.
-3. Copy `.env.example` to `server/.env` and add your Groq key as `GROQ_API_KEY`. You can set `GROQ_MODEL` there too; the default is `openai/gpt-oss-20b`.
-4. Start the app with `npm run dev`.
+- Node.js with npm
+- A Groq API key for generating or refining study sets
 
-Vite runs at `http://localhost:5173` and the API at `http://localhost:3001`. To make a production client build locally, run `npm run build`.
+### Setup
 
-## Use the app
+```sh
+git clone https://github.com/nirbhay41120003/chat-is-this-real.git
+cd chat-is-this-real
+npm install
+npm --prefix server install
+```
 
-Paste notes or import a text-based PDF, TXT, or Markdown file. Imports are limited to 8 MB and 12,000 characters. Create a set, flip through the cards, then take the quiz. Rate how well you remembered each card to schedule its next review.
+Create `server/.env` with your server-side credentials and (optionally) a model override:
 
-Quiz scores, missed cards, review dates, saved sets, and the theme preference are stored in this browser. They are not synced to another device. **Export** downloads a JSON copy of a set. **Share** copies a read-only link containing the set; anyone with the link can view its contents. Scanned PDFs need OCR, which the importer does not provide.
+```dotenv
+GROQ_API_KEY=your_groq_api_key
+# Optional; defaults to openai/gpt-oss-20b
+GROQ_MODEL=openai/gpt-oss-20b
+```
 
+Start both the Express API and Vite development server:
 
-## How generation works
+```sh
+npm run dev
+```
 
-`POST /api/generate` accepts `{ "input": string }`. It streams model output to the browser and sends a completed result with a `topic` and typed `blocks`: 5–10 flashcards, plus optional charts and checklists. The server and browser both validate the result. `POST /api/refine` takes an existing result and a follow-up instruction, then streams back its revision.
+Open `http://localhost:5173`. Vite proxies `/api` requests to the Express server at `http://localhost:3001`. Build the frontend with `npm run build`; the output is written to `dist/`.
 
-The quiz choices use answers from the same deck as distractors. Results, due dates, saved sets, and preferences use local storage, so clearing browser data removes them. Share links contain the deck in the URL fragment; the app does not host or revoke those links.
+## Data and privacy
 
-## Project files
+- Notes are sent to the configured Groq model endpoint when you generate or refine a set.
+- Generated sets, theme preference, review schedules, and quiz history are stored in this browser's local storage. They do not sync between browsers or devices, and clearing browser data removes them.
+- The app keeps up to 12 saved sets in the browser.
+- Export creates a JSON file on your device.
+- Share creates a read-only URL with the study set encoded in its URL fragment. Anyone with that link can view the set. The app does not host, protect, or revoke shared links.
+- Imported files are read in the browser; extracted text is then sent with a generation request.
 
-- `src/` contains the React app, study views, validation, import, scheduling, and sharing helpers.
-- `server/` contains the Express routes and Groq prompt.
-- `index.js` is the Express entry point Vercel detects.
-- `vercel.json` sets the Vercel build command.
+## Deployment
 
-I along with codex have contributed to this project :). The code and behavior have been reviewed.
+The repository is configured for Vercel with a Vite build and an Express API function at `api/[...path].js`. Set `GROQ_API_KEY` in the deployment environment. `GROQ_MODEL` is optional and defaults to `openai/gpt-oss-20b`. The Vite development proxy is only for local development.
+
+## Project layout
+
+| Path | Purpose |
+| --- | --- |
+| `src/App.jsx` | Main app state, saved sets, progress, sharing, and study modes |
+| `src/components/` | Input, flashcards, quiz, loading, result, and study block views |
+| `src/lib/api.js` | Browser API requests and streamed event parsing |
+| `src/lib/importNotes.js` | PDF, TXT, and Markdown text extraction |
+| `src/lib/reviewSchedule.js` | Recall rating and next-review interval calculation |
+| `src/lib/share.js` | Encode and decode read-only share links |
+| `src/lib/validateResult.js` | Client-side study result validation |
+| `server/index.js` | Express API, Groq request, streaming, and server validation |
+| `server/prompt.js` | Structured generation and refinement prompt |
+| `api/[...path].js` | Vercel serverless API entry point |
+| `docs/chat-is-this-real-mark.svg` | Logo shown in this README |
+| `public/favicon.svg` | Browser favicon, using the same mark |
+
+---
+
+Built by me and Codex.
