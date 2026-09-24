@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import path from 'node:path';
 import express from 'express';
 import cors from 'cors';
 import { buildMessages } from './prompt.js';
@@ -14,14 +13,6 @@ app.use(cors({ origin: (origin, callback) => {
   callback(null, localDevOrigin);
 } }));
 app.use(express.json({ limit: '32kb' }));
-
-// Vercel routes the site root to the Express function. Serve Vite's generated
-// entry document there; the referenced assets remain served from public/.
-app.get('/', (_req, res, next) => {
-  res.sendFile(path.resolve(process.cwd(), 'public', 'index.html'), (error) => {
-    if (error) next(error);
-  });
-});
 
 function validResult(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).sort().join(',') !== 'blocks,topic'
