@@ -4,7 +4,6 @@ Chat Is This Real turns notes into a small study set with flashcards, optional c
 
 ## Run it locally
 
-You need Node.js 20 or newer.
 
 1. Install the root dependencies: `npm install`.
 2. Install the API dependencies: `cd server && npm install && cd ..`.
