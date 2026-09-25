@@ -20,6 +20,10 @@ Chat Is This Real is a focused study workspace. Give it class notes or a topic a
 
 The frontend is a React single-page app built with Vite. An Express API sends generation requests to Groq. The Groq API key stays on the server and is never included in the browser bundle.
 
+
+Website: https://chat-is-this-real.vercel.app/
+
+video explanation: https://youtu.be/8jnL8kygeyI
 ## Features
 
 - Paste notes or import selectable text from PDF, TXT, and Markdown files.
